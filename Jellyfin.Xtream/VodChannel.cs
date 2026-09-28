@@ -71,6 +71,8 @@ public class VodChannel(ILogger<VodChannel> logger) : IChannel, IDisableMediaSou
     {
         switch (type)
         {
+            case ImageType.Primary:
+                return Task.FromResult(StreamService.GetEmbeddedImage("movies.png"));
             default:
                 throw new ArgumentException("Unsupported image type: " + type);
         }
@@ -81,7 +83,7 @@ public class VodChannel(ILogger<VodChannel> logger) : IChannel, IDisableMediaSou
     {
         return new List<ImageType>
         {
-            // ImageType.Primary
+            ImageType.Primary
         };
     }
 

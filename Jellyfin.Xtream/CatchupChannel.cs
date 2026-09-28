@@ -74,6 +74,8 @@ public class CatchupChannel(ILogger<CatchupChannel> logger, IXtreamClient xtream
     {
         switch (type)
         {
+            case ImageType.Primary:
+                return Task.FromResult(StreamService.GetEmbeddedImage("catchup.png"));
             default:
                 throw new ArgumentException("Unsupported image type: " + type);
         }
@@ -82,7 +84,7 @@ public class CatchupChannel(ILogger<CatchupChannel> logger, IXtreamClient xtream
     /// <inheritdoc />
     public IEnumerable<ImageType> GetSupportedChannelImages() => new List<ImageType>
     {
-        // ImageType.Primary
+        ImageType.Primary
     };
 
     /// <inheritdoc />

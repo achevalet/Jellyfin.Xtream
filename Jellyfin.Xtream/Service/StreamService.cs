@@ -24,6 +24,8 @@ using Jellyfin.Xtream.Client;
 using Jellyfin.Xtream.Client.Models;
 using Jellyfin.Xtream.Configuration;
 using MediaBrowser.Controller.Channels;
+using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.MediaInfo;
@@ -458,6 +460,19 @@ public partial class StreamService(IXtreamClient xtreamClient, ILogger<StreamSer
             i3 = BitConverter.ToInt32(tmp, 12);
         }
     }
+
+    /// <summary>
+    /// Gets an image embedded in the plugin, used as the image of a channel.
+    /// </summary>
+    /// <param name="name">The file name of the PNG image in the Images folder.</param>
+    /// <returns>The image as <see cref="DynamicImageResponse"/>.</returns>
+    public static DynamicImageResponse GetEmbeddedImage(string name) => new()
+    {
+        Format = ImageFormat.Png,
+        HasImage = true,
+        Stream = typeof(StreamService).Assembly.GetManifestResourceStream($"Jellyfin.Xtream.Images.{name}")
+            ?? throw new InvalidOperationException($"Missing embedded image {name}"),
+    };
 
     /// <summary>
     /// Gets the media source information for the given Xtream stream.

@@ -72,6 +72,8 @@ public class SeriesChannel(ILogger<SeriesChannel> logger) : IChannel, IDisableMe
     {
         switch (type)
         {
+            case ImageType.Primary:
+                return Task.FromResult(StreamService.GetEmbeddedImage("series.png"));
             default:
                 throw new ArgumentException("Unsupported image type: " + type);
         }
@@ -82,7 +84,7 @@ public class SeriesChannel(ILogger<SeriesChannel> logger) : IChannel, IDisableMe
     {
         return new List<ImageType>
         {
-            // ImageType.Primary
+            ImageType.Primary
         };
     }
 
