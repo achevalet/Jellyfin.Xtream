@@ -29,6 +29,9 @@ namespace Jellyfin.Xtream.Tests;
 /// </summary>
 public class SeasonGroupingTests
 {
+    private static SeriesStreamInfo Parse(string json) =>
+        JsonConvert.DeserializeObject<SeriesStreamInfo>(json)!;
+
     private static Dictionary<int, List<Episode>> Group(string json) =>
         StreamService.GroupEpisodesBySeason(JsonConvert.DeserializeObject<SeriesStreamInfo>(json)!);
 
@@ -138,6 +141,40 @@ public class SeasonGroupingTests
     public void Group_SeasonWithOnlyUnusableEpisodes_IsNotListed()
     {
         Assert.Empty(Group("{\"info\":{},\"episodes\":{\"1\":[{\"id\":0,\"season\":1}]}}"));
+    }
+
+    [Fact]
+    public void Resolve_SeasonProducedByTheGrouping_ReturnsItsEpisodes()
+    {
+        SeriesStreamInfo series = Parse("{\"info\":{},\"episodes\":{\"1\":[{\"id\":11,\"season\":1}]}}");
+
+        Assert.Equal(new[] { 11 }, StreamService.ResolveEpisodes(series, 1).Select(e => e.EpisodeId));
+    }
+
+    [Fact]
+    public void Resolve_SeasonFolderPredatingTheGrouping_FallsBackToItsStoredKey()
+    {
+        // The grouping moves this episode out of the catch-all key, leaving a folder for 0 empty.
+        SeriesStreamInfo series = Parse("{\"info\":{},\"episodes\":{\"0\":[{\"id\":11,\"season\":2}]}}");
+
+        Assert.DoesNotContain(0, StreamService.GroupEpisodesBySeason(series).Keys);
+        Assert.Equal(new[] { 11 }, StreamService.ResolveEpisodes(series, 0).Select(e => e.EpisodeId));
+    }
+
+    [Fact]
+    public void Resolve_SeasonWhichIsNeitherGroupedNorStored_IsEmpty()
+    {
+        SeriesStreamInfo series = Parse("{\"info\":{},\"episodes\":{\"1\":[{\"id\":11,\"season\":1}]}}");
+
+        Assert.Empty(StreamService.ResolveEpisodes(series, 7));
+    }
+
+    [Fact]
+    public void Resolve_StoredKeyHoldingOnlyUnusableEpisodes_IsEmpty()
+    {
+        SeriesStreamInfo series = Parse("{\"info\":{},\"episodes\":{\"1\":[{\"id\":0,\"season\":2}]}}");
+
+        Assert.Empty(StreamService.ResolveEpisodes(series, 1));
     }
 
     [Fact]
