@@ -61,6 +61,9 @@ public class ConfigurationVersionTests
         PluginConfiguration userAgent = Base();
         userAgent.UserAgent = "Custom/1.0";
 
+        PluginConfiguration rate = Base();
+        rate.MaxApiRequestsPerSecond = 1.5;
+
         PluginConfiguration visibility = Base();
         visibility.IsSeriesVisible = true;
 
@@ -73,6 +76,7 @@ public class ConfigurationVersionTests
             { "Username", username },
             { "Password", password },
             { "UserAgent", userAgent },
+            { "MaxApiRequestsPerSecond", rate },
             { "IsSeriesVisible", visibility },
             { "Series", series },
         };

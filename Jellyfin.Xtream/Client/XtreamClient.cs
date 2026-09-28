@@ -40,10 +40,18 @@ namespace Jellyfin.Xtream.Client;
 /// <param name="logger">Instance of the <see cref="ILogger"/> interface.</param>
 public class XtreamClient(HttpClient client, ILogger<XtreamClient> logger) : IDisposable, IXtreamClient
 {
+    /// <summary>
+    /// The longest interval the rate limiter will wait between two requests, in seconds.
+    /// </summary>
+    private const double MaxThrottleIntervalSeconds = 300;
+
     private readonly JsonSerializerSettings _serializerSettings = new()
     {
         Error = NullableEventHandler(logger),
     };
+
+    private readonly SemaphoreSlim _requestSemaphore = new(1, 1);
+    private DateTimeOffset _nextRequestTime = DateTimeOffset.MinValue;
 
     public void UpdateUserAgent()
     {
@@ -114,8 +122,47 @@ public class XtreamClient(HttpClient client, ILogger<XtreamClient> logger) : IDi
         };
     }
 
+    /// <summary>
+    /// Waits until the configured rate limit allows another request to be sent.
+    /// </summary>
+    /// <param name="maxRequestsPerSecond">The limit, or 0 or less to disable throttling.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task which completes once the caller may send its request.</returns>
+    internal async Task ThrottleAsync(double maxRequestsPerSecond, CancellationToken cancellationToken)
+    {
+        // Negated so that a NaN rate, which no comparison accepts, disables throttling too.
+        if (!(maxRequestsPerSecond > 0))
+        {
+            return;
+        }
+
+        // An absurdly low rate would otherwise ask for a delay longer than Task.Delay accepts.
+        TimeSpan minInterval = TimeSpan.FromSeconds(Math.Min(1.0 / maxRequestsPerSecond, MaxThrottleIntervalSeconds));
+        DateTimeOffset slot;
+        await _requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            slot = _nextRequestTime > now ? _nextRequestTime : now;
+
+            // Space from the claimed slot, not from now, so the interval does not drift.
+            _nextRequestTime = slot + minInterval;
+        }
+        finally
+        {
+            _requestSemaphore.Release();
+        }
+
+        TimeSpan wait = slot - DateTimeOffset.UtcNow;
+        if (wait > TimeSpan.Zero)
+        {
+            await Task.Delay(wait, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     private async Task<string> QueryApiRaw(ConnectionInfo connectionInfo, string urlPath, CancellationToken cancellationToken)
     {
+        await ThrottleAsync(Plugin.Instance.Configuration.MaxApiRequestsPerSecond, cancellationToken).ConfigureAwait(false);
         Uri uri = new Uri(connectionInfo.BaseUrl + urlPath);
         return await client.GetStringAsync(uri, cancellationToken).ConfigureAwait(false);
     }
@@ -242,6 +289,7 @@ public class XtreamClient(HttpClient client, ILogger<XtreamClient> logger) : IDi
     protected virtual void Dispose(bool b)
     {
         client?.Dispose();
+        _requestSemaphore.Dispose();
     }
 
     /// <inheritdoc />
