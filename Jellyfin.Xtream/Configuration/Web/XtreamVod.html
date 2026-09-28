@@ -11,9 +11,17 @@
         </div>
         <div class="checkboxContainer checkboxContainer-withDescription">
           <label>
-            <input is="emby-checkbox" id="TmdbOverride" name="TmdbOverride" type="checkbox" />
-            <span>Override metadata with TMDB</span>
+            <input is="emby-checkbox" id="VodInfoFetched" name="VodInfoFetched" type="checkbox" />
+            <span>Fetch movie details from the server</span>
           </label>
+          <div class="fieldDescription checkboxFieldDescription">Requests each movie's plot, genres, release date, runtime and TMDB id from the server when its metadata is first fetched, and on a full refresh. A movie with a TMDB id then takes its title and details from TMDB. When disabled, the server gets no request per movie, and Jellyfin looks movies up on TMDB by their title.</div>
+        </div>
+        <div class="checkboxContainer checkboxContainer-withDescription">
+          <label>
+            <input is="emby-checkbox" id="TmdbOverride" name="TmdbOverride" type="checkbox" />
+            <span>Match movies without a TMDB id on TMDB</span>
+          </label>
+          <div class="fieldDescription checkboxFieldDescription">For a movie the server gives no TMDB id, links it to the first TMDB result for its title and year, so it takes its title and details from TMDB. When disabled, Jellyfin matches such movies on TMDB itself and only fills the details they lack. Only used when movie details are fetched from the server.</div>
         </div>
         <div class="sectionTitleContainer flex align-items-center">
           <h2 class="sectionTitle">Video On-demand selection</h2>
