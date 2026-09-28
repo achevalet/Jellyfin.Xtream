@@ -70,6 +70,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool IsTmdbVodOverride { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets a value indicating whether each movie's details are fetched from the Xtream server.
+    /// When disabled, movies keep only what the stream listing provides, with no request per movie.
+    /// </summary>
+    public bool IsVodInfoFetched { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the channels displayed in Live TV.
     /// </summary>
     public SerializableDictionary<int, HashSet<int>> LiveTv { get; set; } = [];

@@ -11,9 +11,17 @@
         </div>
         <div class="checkboxContainer checkboxContainer-withDescription">
           <label>
-            <input is="emby-checkbox" id="TmdbOverride" name="TmdbOverride" type="checkbox" />
-            <span>Override metadata with TMDB</span>
+            <input is="emby-checkbox" id="VodInfoFetched" name="VodInfoFetched" type="checkbox" />
+            <span>Fetch movie details from the server</span>
           </label>
+          <div class="fieldDescription checkboxFieldDescription">Requests each movie's plot, genres, release date and TMDB id from the server when its metadata is refreshed. When disabled, movies only show the title and poster from the category list, and the server gets no request per movie.</div>
+        </div>
+        <div class="checkboxContainer checkboxContainer-withDescription">
+          <label>
+            <input is="emby-checkbox" id="TmdbOverride" name="TmdbOverride" type="checkbox" />
+            <span>Match movies without a TMDB id on TMDB</span>
+          </label>
+          <div class="fieldDescription checkboxFieldDescription">For movies the server gives no TMDB id, searches TMDB by title and year and links the movie to the first match. Only used when movie details are fetched from the server.</div>
         </div>
         <div class="sectionTitleContainer flex align-items-center">
           <h2 class="sectionTitle">Video On-demand selection</h2>

@@ -50,6 +50,11 @@ public class XtreamVodProvider(ILogger<VodChannel> logger, IProviderManager prov
     /// <inheritdoc/>
     public async Task<ItemUpdateType> FetchAsync(Movie item, MetadataRefreshOptions options, CancellationToken cancellationToken)
     {
+        if (!Plugin.Instance.Configuration.IsVodInfoFetched)
+        {
+            return ItemUpdateType.None;
+        }
+
         string? idStr = item.GetProviderId(ProviderName);
         if (idStr is not null)
         {
