@@ -279,7 +279,20 @@ public partial class StreamService(IXtreamClient xtreamClient)
             return [];
         }
 
-        return series.Episodes.Keys.Select((int seasonId) => new Tuple<SeriesStreamInfo, int>(series, seasonId));
+        return GroupEpisodesBySeason(series).Keys.Select((int seasonId) => new Tuple<SeriesStreamInfo, int>(series, seasonId));
+    }
+
+    /// <summary>
+    /// Groups the episodes of a series by the season they report, falling back to the key they are stored under.
+    /// </summary>
+    /// <param name="series">The series to group the episodes of.</param>
+    /// <returns>The episodes of the series, keyed by season id.</returns>
+    internal static Dictionary<int, List<Episode>> GroupEpisodesBySeason(SeriesStreamInfo series)
+    {
+        return series.Episodes
+            .SelectMany(kv => kv.Value.Select(e => (SeasonId: e.Season != 0 ? e.Season : kv.Key, Episode: e)))
+            .GroupBy(x => x.SeasonId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Episode).ToList());
     }
 
     /// <summary>
@@ -298,7 +311,13 @@ public partial class StreamService(IXtreamClient xtreamClient)
         }
 
         Season? season = series.Seasons.FirstOrDefault(s => s.SeasonId == seasonId);
-        return series.Episodes[seasonId].Select((Episode episode) => new Tuple<SeriesStreamInfo, Season?, Episode>(series, season, episode));
+
+        if (!GroupEpisodesBySeason(series).TryGetValue(seasonId, out List<Episode>? episodes))
+        {
+            return [];
+        }
+
+        return episodes.Select(e => new Tuple<SeriesStreamInfo, Season?, Episode>(series, season, e));
     }
 
     private static void StoreBytes(byte[] dst, int offset, int i)
