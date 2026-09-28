@@ -1,4 +1,13 @@
 # Jellyfin.Xtream
+
+> [!NOTE]
+> This is not the official Jellyfin.Xtream plugin, but a custom fork adapted to my personal usage.
+> Its changes might not fit everyone's needs: for the official plugin, see
+> [Kevinjil/Jellyfin.Xtream](https://github.com/Kevinjil/Jellyfin.Xtream).
+>
+> Many thanks to Kevin Jilissen for creating and maintaining this plugin, and for the great work
+> this fork is built on.
+
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Kevinjil/Jellyfin.Xtream/total)
 ![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/Kevinjil/Jellyfin.Xtream/latest/total)
 ![GitHub commits since latest release](https://img.shields.io/github/commits-since/Kevinjil/Jellyfin.Xtream/latest)
