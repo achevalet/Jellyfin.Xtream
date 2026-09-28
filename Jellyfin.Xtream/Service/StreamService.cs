@@ -98,7 +98,7 @@ public partial class StreamService(IXtreamClient xtreamClient, ILogger<StreamSer
     /// Jellyfin only rewrites the sources it saved for a channel item when the item changes,
     /// so channel media items carry this as their modification date.
     /// </summary>
-    public static readonly DateTime MediaSourceRevision = new(2026, 9, 28, 0, 0, 0, DateTimeKind.Utc);
+    public static readonly DateTime MediaSourceRevision = new(2026, 9, 28, 12, 0, 0, DateTimeKind.Utc);
 
     private static readonly Regex _tagRegex = TagRegex();
 
@@ -529,7 +529,8 @@ public partial class StreamService(IXtreamClient xtreamClient, ILogger<StreamSer
                     Height = videoInfo?.Height,
                     Index = videoInfo?.Index ?? -1,
                     IsAVC = videoInfo?.IsAVC,
-                    IsInterlaced = true,
+                    // Broadcast TV may be interlaced, VOD and series are files that ffprobe reports on.
+                    IsInterlaced = type is StreamType.Live or StreamType.CatchUp,
                     Level = videoInfo?.Level,
                     PixelFormat = videoInfo?.PixelFormat,
                     Profile = videoInfo?.Profile,
