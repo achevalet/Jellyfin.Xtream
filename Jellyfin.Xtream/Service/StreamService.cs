@@ -151,6 +151,13 @@ public partial class StreamService(IXtreamClient xtreamClient)
     }
 
     /// <summary>
+    /// Checks whether an Xtream id is usable, which excludes the default left by a failed parse.
+    /// </summary>
+    /// <param name="id">The Xtream id to check.</param>
+    /// <returns>True if the id can address an item.</returns>
+    internal static bool IsUsableId(int id) => id > 0;
+
+    /// <summary>
     /// Gets an async iterator for the configured channels.
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
@@ -160,7 +167,8 @@ public partial class StreamService(IXtreamClient xtreamClient)
         PluginConfiguration config = Plugin.Instance.Configuration;
 
         IEnumerable<StreamInfo> streams = await xtreamClient.GetLiveStreamsAsync(Plugin.Instance.Creds, cancellationToken).ConfigureAwait(false);
-        return streams.Where((StreamInfo channel) => channel.CategoryId.HasValue && IsConfigured(config.LiveTv, channel.CategoryId.Value, channel.StreamId));
+        return streams.Where((StreamInfo channel) =>
+            IsUsableId(channel.StreamId) && channel.CategoryId.HasValue && IsConfigured(config.LiveTv, channel.CategoryId.Value, channel.StreamId));
     }
 
     /// <summary>
@@ -228,7 +236,8 @@ public partial class StreamService(IXtreamClient xtreamClient)
         }
 
         List<StreamInfo> streams = await xtreamClient.GetVodStreamsByCategoryAsync(Plugin.Instance.Creds, categoryId, cancellationToken).ConfigureAwait(false);
-        return streams.Where((StreamInfo stream) => IsConfigured(Plugin.Instance.Configuration.Vod, categoryId, stream.StreamId));
+        return streams.Where((StreamInfo stream) =>
+            IsUsableId(stream.StreamId) && IsConfigured(Plugin.Instance.Configuration.Vod, categoryId, stream.StreamId));
     }
 
     /// <summary>
@@ -256,7 +265,8 @@ public partial class StreamService(IXtreamClient xtreamClient)
         }
 
         List<Series> series = await xtreamClient.GetSeriesByCategoryAsync(Plugin.Instance.Creds, categoryId, cancellationToken).ConfigureAwait(false);
-        return series.Where((Series series) => IsConfigured(Plugin.Instance.Configuration.Series, series.CategoryId, series.SeriesId));
+        return series.Where((Series series) =>
+            IsUsableId(series.SeriesId) && IsConfigured(Plugin.Instance.Configuration.Series, series.CategoryId, series.SeriesId));
     }
 
     /// <summary>
@@ -290,7 +300,9 @@ public partial class StreamService(IXtreamClient xtreamClient)
     internal static Dictionary<int, List<Episode>> GroupEpisodesBySeason(SeriesStreamInfo series)
     {
         return series.Episodes
-            .SelectMany(kv => kv.Value.Select(e => (SeasonId: e.Season != 0 ? e.Season : kv.Key, Episode: e)))
+            .SelectMany(kv => kv.Value
+                .Where(e => IsUsableId(e.EpisodeId))
+                .Select(e => (SeasonId: e.Season != 0 ? e.Season : kv.Key, Episode: e)))
             .GroupBy(x => x.SeasonId)
             .ToDictionary(g => g.Key, g => g.Select(x => x.Episode).ToList());
     }
