@@ -362,13 +362,37 @@ public partial class StreamService(IXtreamClient xtreamClient, ILogger<StreamSer
         }
 
         Season? season = series.Seasons.FirstOrDefault(s => s.SeasonId == seasonId);
+        return ResolveEpisodes(series, seasonId, logger)
+            .Select(e => new Tuple<SeriesStreamInfo, Season?, Episode>(series, season, e));
+    }
 
-        if (!GroupEpisodesBySeason(series, logger).TryGetValue(seasonId, out List<Episode>? episodes))
+    /// <summary>
+    /// Resolves the episodes of one season, falling back to the key they are stored under.
+    /// </summary>
+    /// <param name="series">The series to take the episodes from.</param>
+    /// <param name="seasonId">The season to resolve the episodes of.</param>
+    /// <param name="logger">The logger to report a fallback to, if any.</param>
+    /// <returns>The episodes of the season, empty when it holds none.</returns>
+    internal static List<Episode> ResolveEpisodes(SeriesStreamInfo series, int seasonId, ILogger? logger = null)
+    {
+        if (GroupEpisodesBySeason(series, logger).TryGetValue(seasonId, out List<Episode>? episodes))
         {
-            return [];
+            return episodes;
         }
 
-        return episodes.Select(e => new Tuple<SeriesStreamInfo, Season?, Episode>(series, season, e));
+        // A season folder built under an earlier grouping still asks for the key it was built with.
+        List<Episode> stored = series.Episodes.TryGetValue(seasonId, out ICollection<Episode>? value) && value is not null
+            ? value.Where(e => IsUsableId(e.EpisodeId)).ToList()
+            : [];
+        if (stored.Count > 0)
+        {
+            logger?.LogWarning(
+                "Season {SeasonId} is not a season of this series, falling back to the {Count} episodes stored under that key",
+                seasonId,
+                stored.Count);
+        }
+
+        return stored;
     }
 
     private static void StoreBytes(byte[] dst, int offset, int i)
