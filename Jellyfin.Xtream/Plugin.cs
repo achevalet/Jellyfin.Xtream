@@ -46,7 +46,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <param name="xmlSerializer">Instance of the <see cref="IXmlSerializer"/> interface.</param>
     /// <param name="taskManager">Instance of the <see cref="ITaskManager"/> interface.</param>
     /// <param name="xtreamClient">Instance of the <see cref="IXtreamClient"/> interface.</param>
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ITaskManager taskManager, IXtreamClient xtreamClient)
+    /// <param name="streamServiceLogger">Instance of the <see cref="ILogger"/> interface.</param>
+    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ITaskManager taskManager, IXtreamClient xtreamClient, ILogger<StreamService> streamServiceLogger)
         : base(applicationPaths, xmlSerializer)
     {
         _instance = this;
@@ -57,7 +58,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             client.UpdateUserAgent();
         }
 
-        StreamService = new(xtreamClient);
+        StreamService = new(xtreamClient, streamServiceLogger);
         TaskService = new(taskManager);
     }
 
