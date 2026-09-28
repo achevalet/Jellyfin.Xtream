@@ -118,6 +118,28 @@ public class SeasonGroupingTests
         Assert.Equal(new[] { 31, 32, 33 }, seasons[3].Select(e => e.EpisodeId).OrderBy(id => id));
     }
 
+    [Theory]
+    [InlineData("\"id\":\"n/a\"")]
+    [InlineData("\"id\":0")]
+    [InlineData("\"id\":-1")]
+    public void Group_EpisodeWithoutUsableId_IsDropped(string id)
+    {
+        // An unparseable id is swallowed by the error handler and left at 0, so it must be dropped.
+        SeriesStreamInfo series = JsonConvert.DeserializeObject<SeriesStreamInfo>(
+            $"{{\"info\":{{}},\"episodes\":{{\"1\":[{{{id},\"season\":1}},{{\"id\":12,\"season\":1}}]}}}}",
+            new JsonSerializerSettings { Error = XtreamClient.NullableEventHandler(NullLogger<XtreamClient>.Instance) })!;
+
+        Dictionary<int, List<Episode>> seasons = StreamService.GroupEpisodesBySeason(series);
+
+        Assert.Equal(new[] { 12 }, seasons[1].Select(e => e.EpisodeId));
+    }
+
+    [Fact]
+    public void Group_SeasonWithOnlyUnusableEpisodes_IsNotListed()
+    {
+        Assert.Empty(Group("{\"info\":{},\"episodes\":{\"1\":[{\"id\":0,\"season\":1}]}}"));
+    }
+
     [Fact]
     public void Group_NoEpisodes_YieldsNoSeasons()
     {
