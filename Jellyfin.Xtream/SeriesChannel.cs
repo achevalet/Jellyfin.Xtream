@@ -37,8 +37,13 @@ namespace Jellyfin.Xtream;
 /// <param name="logger">Instance of the <see cref="ILogger"/> interface.</param>
 public class SeriesChannel(ILogger<SeriesChannel> logger) : IChannel, IDisableMediaSourceDisplay, ISupportsMediaProbe
 {
+    /// <summary>
+    /// The name of the channel, which Jellyfin derives the channel id from.
+    /// </summary>
+    public const string ChannelName = "Xtream Series";
+
     /// <inheritdoc />
-    public string? Name => "Xtream Series";
+    public string? Name => ChannelName;
 
     /// <inheritdoc />
     public string? Description => "Series streamed from the Xtream-compatible server.";
