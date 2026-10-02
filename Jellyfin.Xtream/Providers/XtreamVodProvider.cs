@@ -67,15 +67,7 @@ public class XtreamVodProvider(ILogger<VodChannel> logger, IProviderManager prov
                 return ItemUpdateType.None;
             }
 
-            item.Overview ??= i.Plot;
-            item.PremiereDate ??= i.ReleaseDate;
-            item.RunTimeTicks ??= i.DurationSecs * TimeSpan.TicksPerSecond;
-            item.TotalBitrate ??= i.Bitrate;
-
-            if (i.Genre is string genres)
-            {
-                item.Genres ??= genres.Split(',').Select(genre => genre.Trim()).ToArray();
-            }
+            ApplyDetails(item, i);
 
             if (!item.HasProviderId(MetadataProvider.Tmdb))
             {
@@ -115,5 +107,24 @@ public class XtreamVodProvider(ILogger<VodChannel> logger, IProviderManager prov
         }
 
         return ItemUpdateType.MetadataImport;
+    }
+
+    /// <summary>
+    /// Fills the details of a movie the server provides, keeping what the movie already has.
+    /// </summary>
+    /// <param name="item">The movie.</param>
+    /// <param name="info">The details of the movie from the server.</param>
+    internal static void ApplyDetails(Movie item, VodInfo info)
+    {
+        item.Overview ??= info.Plot;
+        item.PremiereDate ??= info.ReleaseDate;
+        item.RunTimeTicks ??= info.DurationSecs * TimeSpan.TicksPerSecond;
+        item.TotalBitrate ??= info.Bitrate;
+
+        // Genres is an empty array, never null, when the movie has none.
+        if (item.Genres.Length == 0)
+        {
+            item.Genres = [.. SeriesChannel.GetGenres(info.Genre)];
+        }
     }
 }
