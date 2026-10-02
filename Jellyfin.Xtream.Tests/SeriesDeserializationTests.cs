@@ -98,4 +98,18 @@ public class SeriesDeserializationTests
         // The client tells "no series data" apart from "one bad member" by this throwing.
         Assert.ThrowsAny<JsonException>(() => Deserialize("[]"));
     }
+
+    [Fact]
+    public void Deserialize_SeriesListWithDateStringLastModified_KeepsEverySeries()
+    {
+        // As sent by the provider of #287, where Xtream normally sends a Unix timestamp.
+        List<Series>? series = JsonConvert.DeserializeObject<List<Series>>(
+            "[{\"series_id\":998,\"name\":\"A\",\"last_modified\":\"2026-02-02 15:08:55\",\"category_id\":\"276\"},"
+            + "{\"series_id\":999,\"name\":\"B\",\"last_modified\":\"2026-01-06 17:23:48\",\"category_id\":\"276\"}]",
+            new JsonSerializerSettings { Error = XtreamClient.NullableEventHandler(NullLogger<XtreamClient>.Instance) });
+
+        Assert.NotNull(series);
+        Assert.Equal(new[] { 998, 999 }, series.Select(s => s.SeriesId));
+        Assert.Equal(new[] { "A", "B" }, series.Select(s => s.Name));
+    }
 }
