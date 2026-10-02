@@ -151,17 +151,20 @@ public class SeriesChannel(ILogger<SeriesChannel> logger) : IChannel, ISupportsM
         };
     }
 
-    private static List<string> GetGenres(string genreString)
+    internal static List<string> GetGenres(string? genreString)
     {
-        return new(genreString.Split(',').Select(genre => genre.Trim()));
+        // Providers send null or an empty string for a series without genres.
+        return genreString?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [];
     }
 
-    private static List<PersonInfo> GetPeople(string cast)
+    internal static List<PersonInfo> GetPeople(string? cast)
     {
-        return cast.Split(',').Select(name => new PersonInfo()
-        {
-            Name = name.Trim()
-        }).ToList();
+        // Providers send null or an empty string for a series without cast.
+        return cast?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(name => new PersonInfo()
+            {
+                Name = name
+            }).ToList() ?? [];
     }
 
     private ChannelItemInfo CreateChannelItemInfo(int seriesId, SeriesStreamInfo series, int seasonId)
